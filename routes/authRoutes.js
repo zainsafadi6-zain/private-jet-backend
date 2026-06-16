@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
 const createToken = (userId, role) => {
@@ -110,5 +111,20 @@ router.get("/admin-test", protect, adminOnly, (req, res) => {
     message: "Welcome admin, access granted",
   });
 });
-
+router.get("/users", protect, adminOnly, async (req, res) => {
+  try {
+    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+});
+router.delete("/users/:id", protect, adminOnly, async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete user" });
+  }
+});
 export default router;
