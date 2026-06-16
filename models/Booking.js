@@ -44,6 +44,20 @@ const bookingSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    flightTime: {
+  type: String,
+  required: true,
+},
+
+tripType: {
+  type: String,
+  enum: ["One Way", "Round Trip"],
+  default: "One Way",
+},
+
+returnDate: {
+  type: Date,
+},
   },
   { timestamps: true }
 );

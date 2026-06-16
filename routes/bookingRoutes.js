@@ -9,12 +9,15 @@ const router = express.Router();
 router.post("/", protect, async (req, res) => {
   try {
     const {
-      jet,
-      departureCity,
-      destinationCity,
-      departureDate,
-      passengers,
-    } = req.body;
+  jet,
+  departureCity,
+  destinationCity,
+  departureDate,
+  flightTime,
+  tripType,
+  returnDate,
+  passengers,
+} = req.body;
 
     const selectedJet = await Jet.findById(jet);
 
@@ -30,6 +33,9 @@ router.post("/", protect, async (req, res) => {
       departureDate,
       passengers,
       totalPrice: selectedJet.price,
+      flightTime,
+        tripType,
+        returnDate,
     });
 
     res.status(201).json(booking);
@@ -108,5 +114,32 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
     res.status(500).json({ message: "Failed to delete booking" });
   }
 });
+router.get("/:id/ticket", protect, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("client", "name email")
+      .populate("jet");
 
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (
+      booking.client._id.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    if (booking.status !== "Confirmed") {
+      return res.status(400).json({
+        message: "Ticket is only available after admin confirmation",
+      });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to load ticket" });
+  }
+});
 export default router;
